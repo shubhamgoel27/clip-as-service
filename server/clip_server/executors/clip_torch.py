@@ -60,7 +60,10 @@ class CLIPEncoder(Executor):
                 if not d.blob and d.uri:
                     # in case user uses HTTP protocol and send data via curl not using .blob (base64), but in .uri
                     d.load_uri_to_blob()
-                d.tensor = self._preprocess_blob(d.blob)
+
+                d.convert_blob_to_image_tensor()
+                d.tensor = self._preprocess_tensor(d.tensor)
+
         da.tensors = da.tensors.to(self._device)
         return da
 
