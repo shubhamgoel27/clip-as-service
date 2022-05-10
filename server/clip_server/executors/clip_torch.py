@@ -52,7 +52,7 @@ class CLIPEncoder(Executor):
 
         self._pool = ThreadPool(processes=num_worker_preprocess)
 
-    @monitor('preproc_images_seconds','Time preprocessing images')
+    @monitor(name='preproc_images_seconds', documentation='Time preprocessing images')
     def _preproc_image(self, da: 'DocumentArray') -> 'DocumentArray':
         for d in da:
             if d.tensor is not None:
@@ -65,7 +65,7 @@ class CLIPEncoder(Executor):
         da.tensors = da.tensors.to(self._device)
         return da
 
-    @monitor('preproc_texts_seconds','Time preprocessing texts')
+    @monitor(name='preproc_texts_seconds', documentation='Time preprocessing texts')
     def _preproc_text(self, da: 'DocumentArray') -> Tuple['DocumentArray', List[str]]:
         texts = da.texts
         da.tensors = clip.tokenize(texts).to(self._device)
