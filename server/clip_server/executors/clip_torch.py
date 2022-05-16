@@ -26,6 +26,23 @@ class CLIPEncoder(Executor):
         minibatch_size: int = 16,
         **kwargs,
     ):
+        """Encode images and texts into embeddings where the input is an iterable of raw strings.
+
+        Each image and text must be represented as a string. The following strings are acceptable:
+
+            - local image filepath, will be considered as an image
+            - remote image http/https, will be considered as an image
+            - a dataURI, will be considered as an image
+            - plain text, will be considered as a sentence
+
+        :param name: Model weights, default is ViT-B/32. Support all OpenAI released pretrained models
+        :param device: cuda or cpu. Default is None means auto-detect.
+        :param jit: If to enable Torchscript JIT, default is False.
+        :param num_worker_preprocess: The number of CPU workers for image & text prerpocessing, default 4.
+        :param minibatch_size: The size of a minibatch for CPU preprocessing and GPU encoding, default 64. Reduce the size of it if you encounter OOM on GPU.
+        :param kwargs: kwargs passed to super().
+        :return: the embedding in a numpy ndarray with shape ``[N, D]``. ``N`` is in the same length of ``content``.
+        """
         super().__init__(**kwargs)
 
         if not device:
@@ -61,13 +78,23 @@ class CLIPEncoder(Executor):
 
     @requests(on='/rank')
     async def rank(self, docs: 'DocumentArray', parameters: Dict, **kwargs):
+        """Computes a relevance score for each match using cosine scores and softmax.
 
+        :param docs: List of :class:`DocumentArray` matched to query results.
+        :param parameters: Not used (kept to maintain interface).
+        :param kwargs: Not used (kept to maintain interface).
+        """
         await self.encode(docs['@r,m'])
 
         set_rank(docs)
 
     @requests
     async def encode(self, docs: 'DocumentArray', **kwargs):
+        """Encode images and texts into embeddings where the input is an iterable of :class:`docarray.Document`.
+
+        :param docs: An iterable of :class:`docarray.Document`, each Document must be filled with `.uri`, `.text` or `.blob`.
+        :param kwargs: Not used (kept to maintain interface).
+        """
         _img_da = DocumentArray()
         _txt_da = DocumentArray()
         for d in docs:
